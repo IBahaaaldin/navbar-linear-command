@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Centered Command Navbar — Ready-UIs</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Geist Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Smooth global theme transition */
+    html, body {
+      transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                  color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Dark Mode Glass - Linear Aesthetic */
+    .dark .linear-dock {
+      background: rgba(13, 15, 23, 0.88);
+      backdrop-filter: blur(24px) saturate(190%);
+      -webkit-backdrop-filter: blur(24px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.8),
+                  0 0 0 1px rgba(255, 255, 255, 0.05),
+                  inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+    }
+
+    /* Light Mode Glass - Ultra-clean Porcelain */
+    .linear-dock {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(24px) saturate(190%);
+      -webkit-backdrop-filter: blur(24px) saturate(190%);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.08),
+                  0 0 0 1px rgba(0, 0, 0, 0.04),
+                  inset 0 1px 0 0 rgba(255, 255, 255, 1);
+    }
+
+    /* Sliding pill indicator */
+    #tabIndicator {
+      transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                  width 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.2s ease;
+    }
+
+    /* Invisible hover bridge to eliminate dropdown disconnect */
+    .hover-bridge::before {
+      content: '';
+      position: absolute;
+      top: -12px;
+      left: 0;
+      right: 0;
+      height: 16px;
+      background: transparent;
+    }
+
+    /* Dropdown Popover Glass */
+    .dark .menu-popover {
+      background: rgba(15, 17, 26, 0.95);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9);
+    }
+    .menu-popover {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Command Palette Card */
+    .dark .command-palette-card {
+      background: rgba(14, 16, 25, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.9);
+    }
+    .command-palette-card {
+      background: rgba(255, 255, 255, 0.98);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Mobile drawer smooth transition */
+    #mobileCommandMenu {
+      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Prevent text wrapping across entire navbar */
+    .no-wrap {
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body class="bg-[#000000] dark:bg-[#000000] text-slate-800 dark:text-white min-h-screen flex flex-col items-center justify-center p-4 selection:bg-cyan-500/30 selection:text-white relative">
+
+  <!-- ======================================================== -->
+  <!-- FULLSCREEN BACKDROP FOR MOBILE MENU -->
+  <!-- ======================================================== -->
+  <div id="mobileBackdrop" class="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300"></div>
+
+  <!-- ======================================================== -->
+  <!-- CENTERED COMMAND NAVBAR (DEAD CENTER, FULLY RESPONSIVE) -->
+  <!-- ======================================================== -->
+  <header class="relative z-50 flex flex-col items-center w-full max-w-sm md:max-w-none mx-auto">
+    <nav class="linear-dock rounded-2xl p-2 md:px-3 md:py-2 flex items-center justify-between md:justify-start gap-1.5 md:gap-3 shadow-2xl relative select-none w-full md:w-auto">
+      
+      <!-- Brand Logo -->
+      <a href="#home" class="flex items-center gap-2 pl-1 pr-1.5 md:pr-2 py-1 rounded-xl group focus:outline-none flex-shrink-0">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 p-[1px] flex items-center justify-center shadow-md shadow-cyan-500/20 group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
+          <div class="w-full h-full bg-white dark:bg-[#0d0f17] rounded-[11px] flex items-center justify-center font-mono font-bold text-xs text-cyan-600 dark:text-cyan-400">
+            &gt;_
+          </div>
+        </div>
+        <div class="flex flex-col text-left leading-tight no-wrap">
+          <span class="text-xs font-semibold text-neutral-900 dark:text-white tracking-tight group-hover:text-cyan-500 dark:group-hover:text-cyan-300 transition-colors whitespace-nowrap no-wrap">Bahaa Aldin</span>
+          <span class="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium whitespace-nowrap no-wrap">Software Developer</span>
+        </div>
+      </a>
+
+      <!-- Desktop Divider -->
+      <div class="hidden md:block h-6 w-[1px] bg-neutral-200 dark:bg-neutral-800 flex-shrink-0"></div>
+
+      <!-- Desktop Navigation Tabs (Hidden on Mobile) -->
+      <div id="commandTabs" class="relative hidden md:flex items-center gap-0.5">
+        <!-- Floating Pill Capsule -->
+        <div id="tabIndicator" class="absolute top-0 bottom-0 left-0 rounded-xl bg-neutral-900/[0.06] dark:bg-white/[0.08] opacity-0 pointer-events-none"></div>
+
+        <!-- Projects Button (with Reliable Hover & Click Dropdown) -->
+        <div class="relative" id="projectsMenuWrapper">
+          <button id="projectsBtn" 
+                  type="button" 
+                  aria-expanded="false" 
+                  class="nav-tab inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white transition-colors focus:outline-none">
+            <span>Projects</span>
+            <svg class="w-3 h-3 text-neutral-400 transition-transform duration-200 stroke-current stroke-2 fill-none" id="dropdownChevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+
+          <!-- Interactive Projects Popover with Hover Bridge -->
+          <div id="projectsDropdown" class="hover-bridge absolute top-full left-0 pt-2 hidden z-50">
+            <div class="w-72 menu-popover rounded-2xl p-2 transition-all shadow-2xl">
+              <div class="px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-neutral-400 border-b border-neutral-200 dark:border-neutral-800 mb-1">
+                Selected Works
+              </div>
+
+              <a href="https://github.com/IBahaaaldin" target="_blank" class="flex items-start gap-2.5 p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/[0.06] transition-colors group/item">
+                <div class="w-6 h-6 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-600 dark:text-cyan-400 mt-0.5 text-xs font-mono font-bold">
+                  AC
+                </div>
+                <div>
+                  <div class="text-xs font-semibold text-neutral-900 dark:text-white group-hover/item:text-cyan-500 dark:group-hover/item:text-cyan-300 flex items-center gap-1.5">
+                    <span>Air Canvas</span>
+                    <span class="text-[9px] px-1 bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 rounded font-mono">Python</span>
+                  </div>
+                  <div class="text-[11px] text-neutral-500 dark:text-neutral-400 leading-snug">Computer vision gesture drawing system.</div>
+                </div>
+              </a>
+
+              <a href="https://github.com/IBahaaaldin" target="_blank" class="flex items-start gap-2.5 p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/[0.06] transition-colors group/item">
+                <div class="w-6 h-6 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 mt-0.5 text-xs font-mono font-bold">
+                  NA
+                </div>
+                <div>
+                  <div class="text-xs font-semibold text-neutral-900 dark:text-white group-hover/item:text-blue-500 dark:group-hover/item:text-blue-300 flex items-center gap-1.5">
+                    <span>Neon Aura AR</span>
+                    <span class="text-[9px] px-1 bg-blue-500/10 text-blue-600 dark:text-blue-300 rounded font-mono">AR Core</span>
+                  </div>
+                  <div class="text-[11px] text-neutral-500 dark:text-neutral-400 leading-snug">Real-time facial landmark tracking mesh.</div>
+                </div>
+              </a>
+
+              <a href="https://github.com/IBahaaaldin" target="_blank" class="flex items-start gap-2.5 p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/[0.06] transition-colors group/item">
+                <div class="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mt-0.5 text-xs font-mono font-bold">
+                  JV
+                </div>
+                <div>
+                  <div class="text-xs font-semibold text-neutral-900 dark:text-white group-hover/item:text-emerald-500 dark:group-hover/item:text-emerald-300 flex items-center gap-1.5">
+                    <span>GPA &amp; Finance Apps</span>
+                    <span class="text-[9px] px-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 rounded font-mono">Java</span>
+                  </div>
+                  <div class="text-[11px] text-neutral-500 dark:text-neutral-400 leading-snug">Student utilities and productivity tooling.</div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="nav-tab px-3 py-1.5 rounded-xl text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white transition-colors focus:outline-none whitespace-nowrap no-wrap flex-shrink-0">
+          Experience
+        </button>
+        <button type="button" class="nav-tab px-3 py-1.5 rounded-xl text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white transition-colors focus:outline-none whitespace-nowrap no-wrap flex-shrink-0">
+          Stack
+        </button>
+        <button type="button" class="nav-tab px-3 py-1.5 rounded-xl text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white transition-colors focus:outline-none whitespace-nowrap no-wrap flex-shrink-0">
+          About
+        </button>
+      </div>
+
+      <!-- Desktop Divider -->
+      <div class="hidden md:block h-6 w-[1px] bg-neutral-200 dark:bg-neutral-800 flex-shrink-0"></div>
+
+      <!-- Right Controls: ⌘K Search + Theme Switcher + CTA -->
+      <div class="flex items-center gap-1.5 flex-shrink-0">
+        
+        <!-- Interactive ⌘K Trigger Button (Desktop) -->
+        <button id="commandKTrigger" 
+                type="button" 
+                title="Search commands (Press ⌘K)"
+                class="hidden md:inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-neutral-100 dark:bg-white/[0.06] hover:bg-neutral-200 dark:hover:bg-white/[0.1] text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white text-xs transition-colors group focus:outline-none whitespace-nowrap no-wrap flex-shrink-0">
+          <svg class="w-3.5 h-3.5 stroke-current stroke-2 fill-none flex-shrink-0" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <span class="font-mono text-[10px] px-1 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-700 whitespace-nowrap">⌘K</span>
+        </button>
+
+        <!-- Search Icon Trigger (Mobile) -->
+        <button id="mobileSearchTrigger" 
+                type="button" 
+                aria-label="Open Command Search" 
+                class="md:hidden w-8 h-8 rounded-xl flex items-center justify-center text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors flex-shrink-0">
+          <svg class="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+
+        <!-- Theme Switcher Button -->
+        <button id="themeToggleBtn" 
+                type="button" 
+                aria-label="Toggle Color Theme"
+                class="w-8 h-8 rounded-xl flex items-center justify-center text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/80 active:scale-90 transition-all focus:outline-none flex-shrink-0">
+          <!-- Sun (Dark mode) -->
+          <svg id="sunIcon" class="w-4 h-4 fill-none stroke-current stroke-2 hidden dark:block" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <!-- Moon (Light mode) -->
+          <svg id="moonIcon" class="w-4 h-4 fill-none stroke-current stroke-2 block dark:hidden" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 0 1 1-9-9Z"/></svg>
+        </button>
+
+        <!-- GitHub Profile (Desktop) -->
+        <a href="https://github.com/IBahaaaldin" target="_blank" rel="noopener noreferrer" 
+           aria-label="GitHub Profile"
+           class="hidden md:flex w-8 h-8 rounded-xl items-center justify-center text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/80 active:scale-90 transition-all flex-shrink-0">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>
+        </a>
+
+        <!-- CTA Button (Desktop) -->
+        <a href="mailto:bahaam.coding@gmail.com" 
+           class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-neutral-100 dark:text-neutral-900 bg-neutral-900 dark:bg-white hover:bg-neutral-800 dark:hover:bg-neutral-100 shadow-sm active:scale-95 transition-all whitespace-nowrap no-wrap flex-shrink-0">
+          <span class="whitespace-nowrap no-wrap">Get in Touch</span>
+          <svg class="w-3 h-3 stroke-current stroke-2 fill-none flex-shrink-0" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+
+        <!-- Mobile Menu Toggle Button -->
+        <button id="mobileNavBtn" 
+                type="button" 
+                aria-label="Toggle Navigation Menu" 
+                class="md:hidden w-8 h-8 rounded-xl flex items-center justify-center text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors flex-shrink-0">
+          <svg id="navBurger" class="w-4 h-4 stroke-current stroke-2 fill-none transition-transform duration-200" viewBox="0 0 24 24">
+            <line id="lineTop2" x1="4" x2="20" y1="7" y2="7" class="transition-all duration-200 origin-center"/>
+            <line id="lineMid2" x1="4" x2="20" y1="12" y2="12" class="transition-opacity duration-200"/>
+            <line id="lineBot2" x1="4" x2="20" y1="17" y2="17" class="transition-all duration-200 origin-center"/>
+          </svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- ======================================================== -->
+    <!-- REAL RESPONSIVE MOBILE NAVIGATION DRAWER -->
+    <!-- ======================================================== -->
+    <div id="mobileCommandMenu" 
+         class="md:hidden w-full mt-2.5 linear-dock rounded-2xl p-4 shadow-2xl flex-col gap-3 transition-all duration-300 transform -translate-y-2 opacity-0 pointer-events-none hidden">
+      
+      <!-- Mobile Quick Search Trigger Button -->
+      <button id="mobileSearchInputTrigger" type="button" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-neutral-100 dark:bg-white/[0.06] text-neutral-500 dark:text-neutral-400 text-xs border border-neutral-200 dark:border-white/10 hover:border-cyan-500/50 transition-colors">
+        <div class="flex items-center gap-2.5">
+          <svg class="w-3.5 h-3.5 text-cyan-500 stroke-current stroke-2 fill-none" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <span class="text-neutral-600 dark:text-neutral-300 font-sans">Search projects, stack, commands...</span>
+        </div>
+        <kbd class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-700">⌘K</kbd>
+      </button>
+
+      <!-- Section Label: Selected Works -->
+      <div class="px-2 pt-1 text-[10px] font-mono uppercase tracking-wider text-neutral-400 border-b border-neutral-200 dark:border-neutral-800 pb-2">
+        Selected Works
+      </div>
+
+      <!-- Selected Projects Rich Cards -->
+      <div class="flex flex-col gap-1">
+        <a href="https://github.com/IBahaaaldin" target="_blank" class="mobile-link flex items-center justify-between p-2.5 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/[0.06] transition-colors group">
+          <div class="flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-xs font-mono font-bold">AC</span>
+            <div>
+              <div class="text-xs font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
+                <span>Air Canvas</span>
+                <span class="text-[9px] px-1 bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 rounded font-mono">Python</span>
+              </div>
+              <div class="text-[10px] text-neutral-500 dark:text-neutral-400">OpenCV gesture drawing system</div>
+            </div>
+          </div>
+          <svg class="w-3.5 h-3.5 text-neutral-400 group-hover:translate-x-0.5 transition-transform stroke-current stroke-2 fill-none" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+
+        <a href="https://github.com/IBahaaaldin" target="_blank" class="mobile-link flex items-center justify-between p-2.5 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/[0.06] transition-colors group">
+          <div class="flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-mono font-bold">NA</span>
+            <div>
+              <div class="text-xs font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
+                <span>Neon Aura AR</span>
+                <span class="text-[9px] px-1 bg-blue-500/10 text-blue-600 dark:text-blue-300 rounded font-mono">AR Core</span>
+              </div>
+              <div class="text-[10px] text-neutral-500 dark:text-neutral-400">Real-time face landmark tracking</div>
+            </div>
+          </div>
+          <svg class="w-3.5 h-3.5 text-neutral-400 group-hover:translate-x-0.5 transition-transform stroke-current stroke-2 fill-none" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+
+        <a href="https://github.com/IBahaaaldin" target="_blank" class="mobile-link flex items-center justify-between p-2.5 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/[0.06] transition-colors group">
+          <div class="flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-mono font-bold">JV</span>
+            <div>
+              <div class="text-xs font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
+                <span>GPA &amp; Finance Apps</span>
+                <span class="text-[9px] px-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 rounded font-mono">Java</span>
+              </div>
+              <div class="text-[10px] text-neutral-500 dark:text-neutral-400">Student &amp; productivity tooling</div>
+            </div>
+          </div>
+          <svg class="w-3.5 h-3.5 text-neutral-400 group-hover:translate-x-0.5 transition-transform stroke-current stroke-2 fill-none" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+      </div>
+
+      <!-- Navigation Links -->
+      <div class="pt-2 border-t border-neutral-200 dark:border-neutral-800 flex flex-col gap-1">
+        <a href="#experience" class="mobile-link flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-white/[0.08] transition-colors">
+          <span>Experience &amp; Stack</span>
+          <svg class="w-3.5 h-3.5 text-neutral-400 stroke-current stroke-2 fill-none" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+        <a href="#about" class="mobile-link flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-white/[0.08] transition-colors">
+          <span>About Developer</span>
+          <svg class="w-3.5 h-3.5 text-neutral-400 stroke-current stroke-2 fill-none" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+      </div>
+
+      <!-- Socials & Get in Touch -->
+      <div class="pt-3 border-t border-neutral-200 dark:border-neutral-800 flex flex-col gap-2.5">
+        <div class="flex items-center justify-between px-1">
+          <span class="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">Follow &amp; Code</span>
+          <div class="flex items-center gap-1.5">
+            <a href="https://github.com/IBahaaaldin" target="_blank" aria-label="GitHub" class="p-2 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-white/[0.08]">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>
+            </a>
+            <a href="https://www.linkedin.com/in/bahaa-mohammed-371259369" target="_blank" aria-label="LinkedIn" class="p-2 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-white/[0.08]">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.64 1.64 0 1 0 0-3.28 1.64 1.64 0 0 0 0 3.28m1.4 10.74v-8.37H5.06v8.37h2.8z"/></svg>
+            </a>
+            <a href="https://www.instagram.com/ibahaaaldincoding" target="_blank" aria-label="Instagram" class="p-2 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-white/[0.08]">
+              <svg class="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <a href="mailto:bahaam.coding@gmail.com" class="w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-center text-white bg-neutral-900 dark:bg-white dark:text-neutral-900 shadow-md hover:opacity-95 active:scale-[0.98] transition-all flex items-center justify-center gap-2 whitespace-nowrap no-wrap">
+          <span class="whitespace-nowrap no-wrap">Get in Touch</span>
+          <svg class="w-3.5 h-3.5 stroke-current stroke-2 fill-none flex-shrink-0" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- COMMAND PALETTE MODAL (⌘K POPUP) -->
+  <!-- ======================================================== -->
+  <div id="commandModal" class="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-md z-[100] hidden items-start justify-center pt-16 sm:pt-28 p-4 transition-all opacity-0">
+    <div id="commandDialog" class="command-palette-card w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl transition-all scale-95 duration-200">
+      
+      <!-- Search Input Bar -->
+      <div class="flex items-center gap-3 px-4 py-3.5 border-b border-neutral-200 dark:border-neutral-800">
+        <svg class="w-4 h-4 text-cyan-500 stroke-current stroke-2 fill-none" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="commandInput" 
+               type="text" 
+               placeholder="Type a project, action, or command..." 
+               autocomplete="off"
+               class="w-full bg-transparent text-sm text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none font-sans" />
+        <kbd id="closeModalBtn" class="cursor-pointer text-[10px] font-mono px-2 py-1 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 hover:text-neutral-900 dark:hover:text-white">
+          ESC
+        </kbd>
+      </div>
+
+      <!-- Command List Items -->
+      <div class="p-2 max-h-80 overflow-y-auto space-y-1 text-xs">
+        <div class="px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-neutral-400">
+          Projects
+        </div>
+        
+        <a href="https://github.com/IBahaaaldin" target="_blank" class="modal-item flex items-center justify-between p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/[0.08] text-neutral-700 dark:text-neutral-200 transition-colors group">
+          <div class="flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-xs font-mono font-bold">AC</span>
+            <span class="font-medium text-neutral-900 dark:text-white">Air Canvas (OpenCV gesture drawing)</span>
+          </div>
+          <span class="text-[10px] text-neutral-400 font-mono">Python</span>
+        </a>
+
+        <a href="https://github.com/IBahaaaldin" target="_blank" class="modal-item flex items-center justify-between p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/[0.08] text-neutral-700 dark:text-neutral-200 transition-colors group">
+          <div class="flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-mono font-bold">NA</span>
+            <span class="font-medium text-neutral-900 dark:text-white">Neon Aura AR (Face tracking mesh)</span>
+          </div>
+          <span class="text-[10px] text-neutral-400 font-mono">AR Core</span>
+        </a>
+
+        <a href="https://github.com/IBahaaaldin" target="_blank" class="modal-item flex items-center justify-between p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/[0.08] text-neutral-700 dark:text-neutral-200 transition-colors group">
+          <div class="flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-mono font-bold">JV</span>
+            <span class="font-medium text-neutral-900 dark:text-white">GPA &amp; Financial Calculators</span>
+          </div>
+          <span class="text-[10px] text-neutral-400 font-mono">Java</span>
+        </a>
+
+        <div class="px-2.5 pt-2 pb-1 text-[10px] font-mono uppercase tracking-wider text-neutral-400 border-t border-neutral-100 dark:border-neutral-800/60 mt-1">
+          Quick Actions
+        </div>
+
+        <button type="button" id="modalToggleTheme" class="modal-item w-full flex items-center justify-between p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/[0.08] text-neutral-700 dark:text-neutral-200 transition-colors text-left">
+          <div class="flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xs">🌓</span>
+            <span class="font-medium text-neutral-900 dark:text-white">Toggle Light / Dark Mode</span>
+          </div>
+          <span class="text-[10px] text-neutral-400 font-mono">Theme</span>
+        </button>
+
+        <a href="mailto:bahaam.coding@gmail.com" class="modal-item flex items-center justify-between p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/[0.08] text-neutral-700 dark:text-neutral-200 transition-colors">
+          <div class="flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs">✉️</span>
+            <span class="font-medium text-neutral-900 dark:text-white">Copy Email Address</span>
+          </div>
+          <span class="text-[10px] text-neutral-400 font-mono">Contact</span>
+        </a>
+
+        <a href="https://github.com/IBahaaaldin" target="_blank" class="modal-item flex items-center justify-between p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/[0.08] text-neutral-700 dark:text-neutral-200 transition-colors">
+          <div class="flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-lg bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 flex items-center justify-center text-xs">🐙</span>
+            <span class="font-medium text-neutral-900 dark:text-white">Visit GitHub Profile (@IBahaaaldin)</span>
+          </div>
+          <span class="text-[10px] text-neutral-400 font-mono">github.com</span>
+        </a>
+      </div>
+
+      <!-- Footer Info -->
+      <div class="px-4 py-2 bg-neutral-50 dark:bg-black/30 border-t border-neutral-100 dark:border-neutral-800/60 flex items-center justify-between text-[10px] text-neutral-400">
+        <div class="flex items-center gap-2">
+          <span>Navigation</span>
+          <span class="font-mono">↑↓</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span>Select</span>
+          <span class="font-mono">↵</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- JAVASCRIPT: INTERACTIONS, DROPDOWNS & COMMAND PALETTE -->
+  <!-- ======================================================== -->
+  <script>
+    // 1. Sliding Magnetic Indicator (Desktop)
+    const tabsContainer = document.getElementById('commandTabs');
+    const tabIndicator = document.getElementById('tabIndicator');
+    const tabs = tabsContainer ? tabsContainer.querySelectorAll('.nav-tab') : [];
+
+    tabs.forEach(tab => {
+      tab.addEventListener('mouseenter', () => {
+        const rect = tab.getBoundingClientRect();
+        const parentRect = tabsContainer.getBoundingClientRect();
+        tabIndicator.style.opacity = '1';
+        tabIndicator.style.width = `${rect.width}px`;
+        tabIndicator.style.transform = `translateX(${rect.left - parentRect.left}px)`;
+      });
+
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('font-semibold', 'text-neutral-950', 'dark:text-white'));
+        tab.classList.add('font-semibold', 'text-neutral-950', 'dark:text-white');
+      });
+    });
+
+    if (tabsContainer) {
+      tabsContainer.addEventListener('mouseleave', () => {
+        tabIndicator.style.opacity = '0';
+      });
+    }
+
+    // 2. Fixed Dropdown Navigation with Hover Bridge & Click Toggle
+    const projectsBtn = document.getElementById('projectsBtn');
+    const projectsDropdown = document.getElementById('projectsDropdown');
+    const dropdownChevron = document.getElementById('dropdownChevron');
+    const projectsMenuWrapper = document.getElementById('projectsMenuWrapper');
+
+    let dropdownOpen = false;
+
+    function openProjectsDropdown() {
+      projectsDropdown.classList.remove('hidden');
+      dropdownChevron.classList.add('rotate-180');
+      projectsBtn.setAttribute('aria-expanded', 'true');
+      dropdownOpen = true;
+    }
+
+    function closeProjectsDropdown() {
+      projectsDropdown.classList.add('hidden');
+      dropdownChevron.classList.remove('rotate-180');
+      projectsBtn.setAttribute('aria-expanded', 'false');
+      dropdownOpen = false;
+    }
+
+    if (projectsMenuWrapper) {
+      projectsMenuWrapper.addEventListener('mouseenter', openProjectsDropdown);
+      projectsMenuWrapper.addEventListener('mouseleave', closeProjectsDropdown);
+    }
+
+    if (projectsBtn) {
+      projectsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (dropdownOpen) {
+          closeProjectsDropdown();
+        } else {
+          openProjectsDropdown();
+        }
+      });
+    }
+
+    // 3. Dark / Light Theme Toggle
+    const html = document.documentElement;
+    const body = document.body;
+    const themeBtn = document.getElementById('themeToggleBtn');
+    const modalToggleTheme = document.getElementById('modalToggleTheme');
+
+    function toggleTheme() {
+      html.classList.toggle('dark');
+      const isDark = html.classList.contains('dark');
+      body.style.backgroundColor = isDark ? '#000000' : '#ffffff';
+
+      themeBtn.style.transform = 'rotate(180deg)';
+      setTimeout(() => {
+        themeBtn.style.transform = 'none';
+      }, 300);
+    }
+
+    themeBtn.addEventListener('click', toggleTheme);
+    if (modalToggleTheme) {
+      modalToggleTheme.addEventListener('click', () => {
+        toggleTheme();
+        closeCommandModal();
+      });
+    }
+
+    // 4. Command Palette (⌘K) Modal Interactive System
+    const commandModal = document.getElementById('commandModal');
+    const commandDialog = document.getElementById('commandDialog');
+    const commandInput = document.getElementById('commandInput');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const commandKTrigger = document.getElementById('commandKTrigger');
+    const mobileSearchTrigger = document.getElementById('mobileSearchTrigger');
+    const mobileSearchInputTrigger = document.getElementById('mobileSearchInputTrigger');
+
+    function openCommandModal() {
+      closeMobileMenu();
+      commandModal.classList.remove('hidden');
+      commandModal.classList.add('flex');
+      requestAnimationFrame(() => {
+        commandModal.classList.remove('opacity-0');
+        commandModal.classList.add('opacity-100');
+        commandDialog.classList.remove('scale-95');
+        commandDialog.classList.add('scale-100');
+        commandInput.focus();
+        commandInput.value = '';
+        filterCommandItems('');
+      });
+    }
+
+    function closeCommandModal() {
+      commandModal.classList.add('opacity-0');
+      commandModal.classList.remove('opacity-100');
+      commandDialog.classList.add('scale-95');
+      commandDialog.classList.remove('scale-100');
+      setTimeout(() => {
+        commandModal.classList.add('hidden');
+        commandModal.classList.remove('flex');
+      }, 200);
+    }
+
+    if (commandKTrigger) commandKTrigger.addEventListener('click', openCommandModal);
+    if (mobileSearchTrigger) mobileSearchTrigger.addEventListener('click', openCommandModal);
+    if (mobileSearchInputTrigger) mobileSearchInputTrigger.addEventListener('click', openCommandModal);
+    if (closeModalBtn) closeModalBtn.addEventListener('click', closeCommandModal);
+
+    commandModal.addEventListener('click', (e) => {
+      if (!commandDialog.contains(e.target)) {
+        closeCommandModal();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (commandModal.classList.contains('hidden')) {
+          openCommandModal();
+        } else {
+          closeCommandModal();
+        }
+      } else if (e.key === 'Escape') {
+        if (!commandModal.classList.contains('hidden')) {
+          closeCommandModal();
+        }
+      }
+    });
+
+    // Real-time Command Filtering
+    function filterCommandItems(query) {
+      const q = query.toLowerCase().trim();
+      const items = document.querySelectorAll('.modal-item');
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        if (text.includes(q)) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
+    commandInput.addEventListener('input', (e) => {
+      filterCommandItems(e.target.value);
+    });
+
+    // 5. Real Responsive Mobile Navigation Drawer
+    const mobileNavBtn = document.getElementById('mobileNavBtn');
+    const mobileCommandMenu = document.getElementById('mobileCommandMenu');
+    const mobileBackdrop = document.getElementById('mobileBackdrop');
+    const lineTop2 = document.getElementById('lineTop2');
+    const lineMid2 = document.getElementById('lineMid2');
+    const lineBot2 = document.getElementById('lineBot2');
+    const mobileLinks = document.querySelectorAll('.mobile-link');
+
+    function openMobileMenu() {
+      mobileCommandMenu.classList.remove('hidden');
+      mobileCommandMenu.classList.add('flex');
+      mobileBackdrop.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        mobileCommandMenu.classList.remove('opacity-0', '-translate-y-2', 'pointer-events-none');
+        mobileCommandMenu.classList.add('opacity-100', 'translate-y-0');
+        mobileBackdrop.classList.remove('opacity-0');
+        mobileBackdrop.classList.add('opacity-100');
+      });
+      // Morph hamburger to X
+      if (lineTop2 && lineMid2 && lineBot2) {
+        lineTop2.setAttribute('transform', 'rotate(45 12 12) translate(0, 5)');
+        lineMid2.style.opacity = '0';
+        lineBot2.setAttribute('transform', 'rotate(-45 12 12) translate(0, -5)');
+      }
+    }
+
+    function closeMobileMenu() {
+      mobileCommandMenu.classList.add('opacity-0', '-translate-y-2', 'pointer-events-none');
+      mobileCommandMenu.classList.remove('opacity-100', 'translate-y-0');
+      mobileBackdrop.classList.remove('opacity-100');
+      mobileBackdrop.classList.add('opacity-0');
+      setTimeout(() => {
+        mobileCommandMenu.classList.add('hidden');
+        mobileCommandMenu.classList.remove('flex');
+        mobileBackdrop.classList.add('hidden');
+      }, 250);
+      // Morph X back to hamburger
+      if (lineTop2 && lineMid2 && lineBot2) {
+        lineTop2.removeAttribute('transform');
+        lineMid2.style.opacity = '1';
+        lineBot2.removeAttribute('transform');
+      }
+    }
+
+    if (mobileNavBtn && mobileCommandMenu) {
+      mobileNavBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = !mobileCommandMenu.classList.contains('hidden') && !mobileCommandMenu.classList.contains('pointer-events-none');
+        if (isOpen) {
+          closeMobileMenu();
+        } else {
+          openMobileMenu();
+        }
+      });
+    }
+
+    if (mobileBackdrop) {
+      mobileBackdrop.addEventListener('click', closeMobileMenu);
+    }
+
+    mobileLinks.forEach(link => {
+      link.addEventListener('click', closeMobileMenu);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeMobileMenu();
+        closeProjectsDropdown();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (projectsMenuWrapper && !projectsMenuWrapper.contains(e.target)) {
+        closeProjectsDropdown();
+      }
+    });
+  </script>
+</body>
+</html>
